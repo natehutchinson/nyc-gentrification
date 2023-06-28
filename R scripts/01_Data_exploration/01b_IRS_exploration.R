@@ -1,7 +1,8 @@
 #########################################################################
 ## File name: IRS data exploration
 ## Description: Import and explore the IRS Tax Statistics data
-## Last edited: June 21, 2023
+## Created: June 21, 2023
+## Last edited: June 28, 2023
 #########################################################################
 
 ## The IRS data is stored in yearly csv files going back to 2011
@@ -13,9 +14,11 @@ library(tidyverse)
 library(janitor)
 library(skimr)
 library(stringr)
+library(sf)
+library(scales)
 
 ## read in files from directory
-files = list.files('data/IRS data')
+files <- list.files('data/irs_data')
 
 ## define empty dataframe to append each year to
 irs_data = data.frame(matrix(nrow = 0, ncol = 3))
@@ -25,7 +28,7 @@ colnames(irs_data) = columns
 ## Loop over each file in the directory, summarize it, and append to our dataframe
 for (file in files) {
   yr = substr(file,0,2)
-  data <- read_csv(paste('data/IRS data/', file, sep = ""), col_types = cols(zipcode = "c")) %>%
+  data <- read_csv(paste('data/irs_data/', file, sep = ""), col_types = cols(zipcode = "c")) %>%
     clean_names() %>%
     mutate(zipcode = str_pad(zipcode, width = 5, pad = "0")) %>% ## ensure all ZIPs have 5 digits
     filter(state %in% c('NJ', 'NY', 'PA'), ## only states in NYC metro area
@@ -51,7 +54,7 @@ for (file in files) {
 
 ## pivot data
 irs_data_wide <- pivot_wider(irs_data, id_cols = zipcode, names_from = year, values_from = avg_agi) %>%
-  write_csv('data/IRS data/irs_data.csv')
+  write_csv('data/irs_data/irs_data.csv')
 
 
 skim(irs_data_wide) 
@@ -60,5 +63,39 @@ skim(irs_data_wide)
 ## note that not all of these ZIPs are in the NYC MSA, and those with missing values are likely to be more rural
 ## of missing values will probably drop after joining with MSA ZIPs
 ## for missing values that remain, probably best to impute
-  
+
+#### MAP AGI data
+### get geometry for nyc metro area
+## load nyc metro zips
+nyc_metro_zips <- read_csv('data/nyc_metro_zips.csv')
+
+## combine IRS data w/ nyc metro zips and shapefile
+zctas <- read_sf('data/cb_2019_us_zcta510_500k/cb_2019_us_zcta510_500k.shp') %>%
+  clean_names() %>%
+  rename(zip_code = geoid10) %>%
+  inner_join(irs_data_wide, by = c('zip_code' = 'zipcode')) %>%
+  inner_join(nyc_metro_zips, by = 'zip_code')
+
+### plot AGI for NYC metro
+ggplot(zctas) +
+  aes(fill = agi20) + 
+  geom_sf(color = "white", size = 0.05) +
+  theme_void() +
+  scale_fill_viridis_c(labels = scales::comma)  
+
+## load nyc zips
+nyc_zips <- read_csv('data/nyc_zips.csv')
+
+## filter for NYC ZIPs only
+zctas_nyc <- zctas %>%
+  inner_join(nyc_zips, by = 'zip_code')
+
+## Plot NYC AGIs
+ggplot(zctas_nyc) +
+  aes(fill = agi20) + 
+  geom_sf(color = "white", size = 0.05) +
+  theme_void() +
+  scale_fill_viridis_c(labels = scales::comma)
+
+
  

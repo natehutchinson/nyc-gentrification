@@ -2,19 +2,13 @@
 ## File name: ACS Download
 ## Description: Pull ACS data by census tract for # of housing units and population
 ## Created: June 30, 2023
-## Last edited: June 30, 2023
+## Last edited: July 11, 2023
 ##################################################################################
 
 ## import libraries
 library(tidyverse)
 library(janitor)
 library(tidycensus)
-
-## replace with your own key
-census_api_key("8524147f6edf7fe4b7c85681397fe5acd6993d62"
-               #               , install = TRUE 
-)
-
 
 #### pull acs data for each year and combine into one df
 ## create blank df
@@ -28,7 +22,8 @@ for (i in 2011:2021) {
     geography = "tract",
     variables = c(
       housing_units = "B25001_001",
-      total_pop = "B01003_001"
+      total_pop = "B01003_001",
+      median_gross_rent = "B25064_001"
     ),
     state =  c("New York" , "New Jersey", "Pennsylvania"), 
     year = i,
@@ -44,6 +39,9 @@ census_data_ready <- census_data_raw %>%
   clean_names() %>%
   pivot_wider(id_cols = c(geoid, name, year), names_from = variable, values_from = estimate) %>%
   write_csv('data/processed_data/census_data_ready.csv')
+
+
+
 
 
 

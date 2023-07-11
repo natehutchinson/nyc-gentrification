@@ -88,11 +88,20 @@ nyc_zips <- read.csv('data/processed_data/nyc_zips.csv', colClasses = c('zip_cod
   mutate(nyc_flag = 1)
 
 ## create flag for inner third of MSA
+nyc_metro_zips <- read.csv('data/processed_data/nyc_metro_zips.csv', colClasses = c('zip_code' = 'character'))
+
 zip_distances <- read_csv('data/processed_data/geo_mapping_files/zip_distance_to_cbd.csv') %>%
   clean_names() %>%
   select(zip_code = id, distance = x10036) %>%
+  inner_join(nyc_metro_zips) %>%
   group_by(zip_code) %>%
   summarise(distance = min(distance))
+
+missing_zip <- zip_distances %>%
+  filter(zip_code == '11211') %>%
+  mutate(zip_code = if_else(zip_code == '11211', '11249', NA))
+
+zip_distances <- rbind(zip_distances, missing_zip)
 
 inner_third_flag <- zip_distances %>%
   mutate(dist_rank = rank(distance),
@@ -123,7 +132,7 @@ combined_diffs_long <- zhvi_long %>%
   ungroup() %>%
   mutate(gentrification_signal = if_else((first_gap == 1 & bottom_income_quartile == 1 & inner_third_flag == 1), 1, 0)) %>%
   select(zip_code, nyc_flag, year, avg_zhvi:gentrification_signal) %>%
-  write.csv('data/processed_data/final_analysis_df.csv')
+  write.csv('data/processed_data/final_analysis_df.csv', row.names = FALSE)
   
 
 

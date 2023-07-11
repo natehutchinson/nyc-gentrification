@@ -2,7 +2,7 @@
 ## File name: Census tract ZIP mapping
 ## Description: Create mapping between census tracts and ZCTAs and summarize ACS data at ZIP level
 ## Created: July 6, 2023
-## Last edited: July 7, 2023
+## Last edited: July 11, 2023
 ###################################################################################################
 
 ## Load libraries
@@ -43,8 +43,10 @@ acs_with_zips <- acs %>%
 
 ## sumarize at ZIP-year level
 mapped_zips_acs_data <- acs_with_zips %>%
+  mutate(total_rent = housing_units * median_gross_rent) %>%
   group_by(zip_code, year) %>%
-  summarise(total_pop = sum(total_pop), housing_units = sum(housing_units)) 
+  summarise(total_pop = sum(total_pop), housing_units = sum(housing_units), 
+            gross_rent_per_unit = sum(total_rent)/sum(housing_units)) 
 
 
 #### get ACS data for zips not mapped by original process
@@ -81,17 +83,25 @@ unmapped_zips_one_to_many <- all_states_one_to_many %>%
 acs_unmapped_zips <- acs %>%
   inner_join(unmapped_zips_one_to_many, relationship = 'many-to-many')
 
-## sumarize at ZIP-year level
+## summarize at ZIP-year level
 unmapped_zips_acs_data <- acs_unmapped_zips %>%
+  mutate(total_rent = housing_units * median_gross_rent) %>%
   group_by(zip_code, year) %>%
-  summarise(total_pop = mean(total_pop), housing_units = mean(housing_units)) 
+  summarise(total_pop = mean(total_pop), housing_units = mean(housing_units),
+            gross_rent_per_unit = mean(total_rent)/mean(housing_units)) 
 
 #### combine mapped and unmapped zips
 ## append mapped and unmapped zips and pivot wide
 acs_data_zip_level <- rbind(mapped_zips_acs_data, unmapped_zips_acs_data) %>%
+  select(-gross_rent_per_unit) %>%
   mutate(total_pop = round(total_pop),
          housing_units = round(housing_units)) %>%
   pivot_wider(names_from = year, values_from = c(total_pop, housing_units))
+
+## save rent data for later
+acs_gross_rent <- rbind(mapped_zips_acs_data, unmapped_zips_acs_data) %>%
+  select(zip_code, year, gross_rent_per_unit) %>%
+  write_csv('data/processed_data/acs_gross_rent_by_zip.csv')
 
 ## ensure that all years are present for every zip
 total_pop_all_years <- acs_data_zip_level %>%

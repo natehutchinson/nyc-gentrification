@@ -78,28 +78,47 @@ cops_311 <- read_csv("data/raw_data/nyc_open_data/311_Service_Requests_nypd.csv"
   ## write csv
   write_csv("data/raw_data/nyc_open_data/nypd_311_calls.csv")
 
-## arrests
-arrests_url <- URLencode('https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$query= SELECT arrest_precinct, date_extract_y(arrest_date) as year  LIMIT 100000')
-
-arrests <- read_csv(arrests_url) %>%
-  clean_names()
-
-# create empty data frame
-arrests_by_precinct <- data.frame(matrix(nrow = 0, ncol = 3))
-colnames(arrests_by_precinct) <- c("arrest_precinct", "year", "count")
-
-# loop over year to keep API calls smaller
+##### arrests
+## download lat-long of every arrest to be summarized at ZIP level in QGIS
 for (year in 2011:2022){
-  query <- paste("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$query= SELECT arrest_precinct, date_extract_y(arrest_date) as year WHERE date_extract_y(arrest_date)=", year, " LIMIT 2000000", sep = "")
+  query <- paste("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$query= SELECT arrest_key, latitude, longitude, x_coord_cd, y_coord_cd WHERE date_extract_y(arrest_date)=", year, " LIMIT 2000000", sep = "")
   url <- URLencode(query)
+  path <- (paste('data/raw_data/nyc_open_data/arrests_by_year/arrests_', year, '.csv', sep = ""))
   df <- read_csv(url) %>%
     clean_names() %>%
-    group_by(arrest_precinct, year) %>%
-    summarise(count = n())
-  arrests_by_precinct <- rbind(arrests_by_precinct, df)
+    write_csv(path)
 }
 
-write_csv(arrests_by_precinct, 'data/raw_data/nyc_open_data/arrests_by_precinct.csv')
+#### use QGIS to count # of arrests by ZIP for each year
+## import data created with QGIS
+# load data for first year (2011)
+arrests_by_year <- read_csv('data/raw_data/nyc_open_data/arrests_by_year/arrest_counts/arrests_by_zip_2011.csv') %>%
+  clean_names() %>%
+  select(zip_code = zipcode, ends_with('arrests')) %>%
+  group_by(zip_code) %>%
+  summarise(arrests_2011 = sum(x2011_arrests))
+
+# append data from each subsequent year
+for (year in 2012:2022){
+  path <- paste('data/raw_data/nyc_open_data/arrests_by_year/arrest_counts/arrests_by_zip_',
+  year, '.csv', sep = "")
+  col <- paste('arrests_', year, sep = "")
+  df <- read_csv(path) %>%
+    clean_names() %>%
+    select(zip_code = zipcode, ends_with('arrests'))
+  colnames(df) <- c('zip_code', col)
+  df <- df %>%
+    group_by(zip_code) %>%
+    summarise_all(sum, na.rm = TRUE)
+  arrests_by_year <- left_join(arrests_by_year, df)
+} 
+
+# pivot data long
+arrests_by_year_ready <- arrests_by_year %>%
+  pivot_longer(arrests_2011:arrests_2022) %>%
+  mutate(year = str_sub(name, 9, 12)) %>%
+  select(zip_code, year, arrests = value) %>%
+  write_csv("data/raw_data/nyc_open_data/arrests.csv")
 
 ## DOB complaints (from 311)
 # load data

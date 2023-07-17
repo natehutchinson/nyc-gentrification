@@ -63,7 +63,7 @@ agi_long <- combined_diffs_with_acs %>%
 
 ## pivot population
 total_pop_long <- combined_diffs_with_acs %>%
-  select(zip_code, total_pop_2011:total_pop_2020) %>%
+  select(zip_code, total_pop_2011:total_pop_2021) %>%
   pivot_longer(-zip_code, names_to = 'year', values_to = 'total_pop', names_prefix = 'total_pop_')
 
 ## pivot zhvi percentile

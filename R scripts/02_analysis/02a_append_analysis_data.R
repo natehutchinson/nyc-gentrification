@@ -40,6 +40,9 @@ permits <- read_csv('data/raw_data/nyc_open_data/housing_permits.csv') %>%
 # 311 calls to nypd
 nypd_calls <- read_csv('data/raw_data/nyc_open_data/nypd_311_calls.csv') %>%
   mutate(zip_code = as.character(zip_code))
+# arrests 
+arrests <- read_csv('data/raw_data/nyc_open_data/arrests.csv') %>%
+  mutate(zip_code = as.character(zip_code))
 
 ## filter for NYC ZIPs  
 nyc <- df %>%
@@ -61,6 +64,8 @@ nyc_df <- nyc %>%
   left_join(permits, by = c("zip_code", "year")) %>%
   ## nypd calls
   left_join(nypd_calls, by = c("zip_code", "year")) %>%
+  ## arrests
+  left_join(arrests, by = c("zip_code", "year")) %>%
   ## save output
   write_csv('data/processed_data/analysis_df_additional_cols.csv')
 

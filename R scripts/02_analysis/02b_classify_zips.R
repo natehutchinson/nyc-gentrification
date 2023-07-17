@@ -48,4 +48,3 @@ df_classified <- df %>%
   left_join(zip_classifications) %>%
   write_csv('data/processed_data/classified_zips.csv')
 
-

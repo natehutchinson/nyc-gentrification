@@ -2,7 +2,7 @@
 ## File name: Create gentrification index- second attempt
 ## Description: Create a continuous gentrification index and map it 
 ## Created: July 13, 2023
-## Last edited: July 14, 2023
+## Last edited: July 19, 2023
 ##############################################################################################################
 
 ## Load libraries
@@ -37,24 +37,23 @@ zctas <- read_sf('data/raw_data/cb_2019_us_zcta510_500k/cb_2019_us_zcta510_500k.
   rename(zip_code = geoid10) %>%
   inner_join(data_for_maps) 
 
+## set theme for all charts
+theme_set(theme_void() + 
+            theme(text = element_text(family="Arial")) +
+            theme(plot.title = element_text(size = 22, face = 'bold')) +
+            theme(plot.subtitle = element_text(color = '#666869', face = 'italic')) +  
+            theme(plot.caption = element_text(size = 6, vjust = 7)) + 
+            theme(legend.key.size = unit(0.5, 'cm')) +
+            theme(legend.text = element_text(size = 8)) +
+            theme(legend.title = element_text(size = 8))) 
+
 ggplot(zctas) +
   aes(fill = percentile_diff) + 
   geom_sf(color = "white", size = 0.05) +
   facet_wrap(~year) +
-  theme_void() +
-  scale_fill_viridis_c(option = "C", end = 0.9)
-
-  
-
-
-## use ZIPs below 25th percentile
-## ensure that you only map zips that stay below that threshold the entire time
-## figure out a good scale to use
-
-## use this color palette throughout    
-# show_col(viridis_pal(option = "C")(6))
-  
-
-
-
-
+  scale_fill_viridis_c(option = "C", end = 0.9, name = 'Gentrification risk index') +
+  labs(
+    title = "Gentrification risk index for low-income \nZIP codes",
+    subtitle = 'Difference between home value and income percentiles',
+    caption = "Source: Zillow Home Value Index (Zillow) & Adjusted Gross Income (IRS)"
+)

@@ -2,7 +2,7 @@
 ## File name: Create charts
 ## Description: Create charts of analysis variables for gentrifying zips against reference groups 
 ## Created: July 12, 2023
-## Last edited: July 13, 2023
+## Last edited: July 19, 2023
 ##############################################################################################################
 
 ## Load libraries
@@ -10,6 +10,9 @@ library(tidyverse)
 library(janitor)
 library(ggplot2)
 library(scales)
+library(extrafont)
+
+font_import()
 
 #### trends for all analysis variables
 ## load data
@@ -94,21 +97,43 @@ zips_indexed <- gentrifying_zips_norm %>%
   filter(between(years_since_signal, -3, 3))
 
 #### graph analysis variables
+## color scheme
+show_col(viridis_pal(option = "C")(6))
+
+## set theme for all charts
+theme_set(theme_minimal() + 
+          theme(panel.grid.minor.y = element_blank()) +
+          theme(panel.grid.major.x = element_blank()) +
+          theme(panel.grid.minor.x = element_blank()) +
+          theme(text = element_text(family="Arial")) +
+          theme(plot.title = element_text(size = 22, face = 'bold')) +
+          theme(plot.subtitle = element_text(color = '#666869', face = 'italic')) +  
+          theme(plot.caption = element_text(size = 6, vjust = 6)) +
+          theme(axis.title = element_text(size = 9)) + 
+          theme(axis.text = element_text(size = 8))) 
+
 ## Class C code violations
 ggplot(zips_indexed) +
-  geom_line(aes(x = years_since_signal, y = violations_c), color = 'blue') + 
+  aes(x = years_since_signal, y = violations_c, label = round(violations_c)) +
+  geom_line(color = '#0D0887FF') + 
+  geom_text(nudge_y = 2, size = 3, color = '#666869') +
+  geom_hline(yintercept = 100, color = 'white') +
   geom_hline(yintercept = 100, linetype = 'dashed') +
-  geom_vline(xintercept = 0, linetype = 'dotted', color = 'gray') +
-  theme_minimal() + 
+  geom_vline(xintercept = 0, linetype = 'dotted', color = '#666869') +
+  annotate("text", x = 0.6, y = 119, label="Gentrification signal onset",
+           size = 2.5, color = '#666869') +
+  scale_x_continuous(breaks = c(-3, -2, -1, 0, 1, 2, 3)) +
   scale_y_continuous(labels = comma, 
-                     limits = c(60, 140)) +
+                     limits = c(80, 120)) +
   labs(
-    title = "Class C Housing Code Violations",
+    title = "Housing code violations spike in the year prior \nto the gentrification signal",
+    subtitle = 'Class C housing code violations relative to low-income neighborhood average',
     x = "Years from gentrification signal",
-    y = "Index of code violations (100 = average for low-income ZIPs)", 
-    caption = "Source: NYC Open Data"
+    y = "Code violations index", 
+    caption = "Source: Housing Maintenance Code Violations, NYC Open Data"
   )
 
+## alteration permits - not used in article
 ggplot(zips_indexed) +
   geom_line(aes(x = years_since_signal, y = permits_alteration), color = 'blue') + 
   geom_hline(yintercept = 100, linetype = 'dashed') +
@@ -123,6 +148,7 @@ ggplot(zips_indexed) +
     caption = "Source: NYC Open Data"
   )
 
+## demolition permits - not used in article
 ggplot(zips_indexed) +
   geom_line(aes(x = years_since_signal, y = permits_demolition), color = 'blue') + 
   geom_hline(yintercept = 100, linetype = 'dashed') +
@@ -137,6 +163,7 @@ ggplot(zips_indexed) +
     caption = "Source: NYC Open Data"
   )
 
+## DOB 311 calls - not used in article
 ggplot(zips_indexed) +
   geom_line(aes(x = years_since_signal, y = dob_calls_311), color = 'blue') + 
   geom_hline(yintercept = 100, linetype = 'dashed') +
@@ -153,32 +180,44 @@ ggplot(zips_indexed) +
 
 ## NYPD 311 calls
 ggplot(zips_indexed) +
-  geom_line(aes(x = years_since_signal, y = nypd_calls_311), color = 'blue') + 
+  aes(x = years_since_signal, y = nypd_calls_311, label = round(nypd_calls_311)) +
+  geom_line(color = '#0D0887FF') + 
+  geom_text(nudge_y = 2, size = 3, color = '#666869') +
+  geom_hline(yintercept = 100, color = 'white') +
   geom_hline(yintercept = 100, linetype = 'dashed') +
-  geom_vline(xintercept = 0, linetype = 'dotted', color = 'gray') +
-  theme_minimal() + 
+  geom_vline(xintercept = 0, linetype = 'dotted', color = '#666869') +
+  annotate("text", x = 0.6, y = 119, label="Gentrification signal onset",
+           size = 2.5, color = '#666869') +
+  scale_x_continuous(breaks = c(-3, -2, -1, 0, 1, 2, 3)) +
   scale_y_continuous(labels = comma, 
                      limits = c(80, 120)) +
   labs(
-    title = "311 Calls routed to NYPD",
+    title = "More people call the police in gentrifying \nneighborhoods",
+    subtitle = '311 calls routed to NYPD relative to low-income neighborhood average',
     x = "Years from gentrification signal",
-    y = "Index of 311 calls (100 = average for low-income ZIPs)",
-    caption = "Source: NYC Open Data"
+    y = "NYPD calls index", 
+    caption = "Source: 311 Service Requests from 2010 to Present, NYC Open Data"
   )
 
 # arrests
 ggplot(zips_indexed) +
-  geom_line(aes(x = years_since_signal, y = arrests), color = 'blue') + 
+  aes(x = years_since_signal, y = arrests, label = round(arrests)) +
+  geom_line(color = '#0D0887FF') + 
+  geom_text(nudge_y = 2, size = 3, color = '#666869') +
+  geom_hline(yintercept = 100, color = 'white') +
   geom_hline(yintercept = 100, linetype = 'dashed') +
-  geom_vline(xintercept = 0, linetype = 'dotted', color = 'gray') +
-  theme_minimal() + 
+  geom_vline(xintercept = 0, linetype = 'dotted', color = '#666869') +
+  annotate("text", x = 0.6, y = 119, label="Gentrification signal onset",
+           size = 2.5, color = '#666869') +
+  scale_x_continuous(breaks = c(-3, -2, -1, 0, 1, 2, 3)) +
   scale_y_continuous(labels = comma, 
                      limits = c(79, 120)) +
   labs(
-    title = "Arrests",
+    title = "Arrests spike in the year prior to the \ngentrification signal",
+    subtitle = 'Arrests made relative to low-income neighborhood average',
     x = "Years from gentrification signal",
-    y = "Index of arrests (100 = average for low-income ZIPs)",
-    caption = "Source: NYC Open Data"
+    y = "Arrests index", 
+    caption = "Source: NYPD Arrests Data (Historic), NYC Open Data"
   )
    
 #### charts for individual zips
@@ -213,7 +252,17 @@ data_for_graphs <- rbind(data_reference, data_zips) %>%
 ## rent- only a few ZIPs with decent data
 rent_graphs <- data_for_graphs %>%
   filter(zip_code %in% c('10031', '10033', '10457', '11375'),
-         !zip_type %in% c('High income', 'Income below 50th percentile'))
+         !zip_type %in% c('High income', 'Income below 50th percentile')) %>%
+  mutate(zip_code = case_when(
+    zip_code == '10031' ~ 'ZIP code 10031: West Harlem',
+    zip_code == '10033' ~ 'ZIP code 10033: Washington Heights',
+    zip_code == '10457' ~ 'ZIP code 10457: West Bronx',
+    zip_code == '11375' ~ 'ZIP code 11375: Forest Hills'
+  ),
+  zip_type = case_when(
+    zip_type == 'ZIP of interest' ~ 'Gentrifying ZIP code',
+    zip_type == 'Income below 25th percentile' ~ 'Low-income ZIP codes'
+  ))
 
 g_year_rent_graphs <- rent_graphs %>%
   select(zip_code, gentrification_year) %>%
@@ -221,13 +270,29 @@ g_year_rent_graphs <- rent_graphs %>%
 
 ggplot(rent_graphs) +
   geom_line(aes(x = year, y = avg_rent, color = zip_type)) +
-  facet_wrap(~zip_code) +
+  facet_wrap(~zip_code, scales = 'free_x') +
   geom_vline(data = g_year_rent_graphs,
              aes(xintercept = gentrification_year)) +
-  theme(legend.position = 'bottom',
-        legend.title = element_blank())
+  geom_text(data = g_year_rent_graphs, aes(x = gentrification_year + 0.1, label = 'Gentrification signal onset', y = Inf),
+            hjust = 0, vjust = 1.1, size = 2.3, 
+            color = '#666869') +
+  scale_x_continuous(limits = c(2013, 2021), 
+                     breaks = seq(2013, 2021)) +
+  scale_color_manual(values = c('#0D0887FF', '#E16462FF')) +
+  theme(strip.text.x = element_text(size = 10, 
+                                    face = "bold.italic"),
+        legend.position = 'bottom',
+        legend.title = element_blank()) +
+  labs(title = "Rent rises faster around the time of a gentrification signal",
+       subtitle = 'Rent in gentrifying ZIP codes vs. other low-income ZIP codes',
+       x = "Year",
+       y = "Yearly average rent",
+       caption = "Source: Zillow Observed Rent Index")
 
-## indexed version
+
+
+
+## indexed version - not used in article
 rent_graphs_indexed <- rent_graphs %>%
   select(zip_code, year, zip_type, avg_rent, gentrification_year) %>%
   pivot_wider(names_from = zip_type, values_from = avg_rent) %>%

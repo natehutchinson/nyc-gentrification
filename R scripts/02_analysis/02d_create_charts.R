@@ -260,8 +260,8 @@ rent_graphs <- data_for_graphs %>%
     zip_code == '11375' ~ 'ZIP code 11375: Forest Hills'
   ),
   zip_type = case_when(
-    zip_type == 'ZIP of interest' ~ 'Gentrifying ZIP code',
-    zip_type == 'Income below 25th percentile' ~ 'Low-income ZIP codes'
+    zip_type == 'ZIP of interest' ~ 'Rent in gentrifying ZIP code',
+    zip_type == 'Income below 25th percentile' ~ 'Rent in low-income ZIP codes'
   ))
 
 g_year_rent_graphs <- rent_graphs %>%

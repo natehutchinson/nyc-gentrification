@@ -2,7 +2,7 @@
 
 ## Overview
 
-This readme document will walk through the process used to download, clean, and visualize the data used to write [this article](add link). The analysis was done entirely using R and QGIS. All R scripts can be found in the `R scripts` folder of this Github repository, and the components using QGIS are detailed below.
+This readme document will walk through the process used to download, clean, and visualize the data used to write [this article](https://medium.com/@natehutchinson92/there-goes-the-neighborhood-a-data-driven-approach-to-mitigating-the-effects-of-gentrification-482338a764e). The analysis was done entirely using R and QGIS. All R scripts can be found in the `R scripts` folder of this Github repository, and the components using QGIS are detailed below.
 
 The next section will discuss the data sources used for this project. The final section will discuss data processing and visualization.
 
